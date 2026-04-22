@@ -1,60 +1,35 @@
-const fs = require('fs');
-const path = require('path');
 const Student = require('../models/student.model');
-const { generateId } = require('../utils/idGenerator');
 const CustomError = require('../utils/Customerror');
 
-const filePath = path.join(__dirname, '../data/students.json');
-
-// Read data
-const readData = () => {
-    const data = fs.readFileSync(filePath);
-    return JSON.parse(data);
-};
-
-// Write data
-const writeData = (data) => {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-};
-
 // CREATE
-exports.createStudent = (payload) => {
-    const students = readData();
-
-    const newStudent = new Student({
-        id: generateId(),
-        ...payload
-    });
-
-    students.push(newStudent);
-    writeData(students);
-
+exports.createStudent = async (payload) => {
+    const newStudent = await Student.create(payload);
     return newStudent;
 };
 
 // GET ALL + pagination + search
-exports.getAllStudents = ({ page = 1, limit = 5, search = '' }) => {
-    let students = readData();
-
+exports.getAllStudents = async ({ page = 1, limit = 5, search = '' }) => {
+    const query = {};
     if (search) {
-        students = students.filter(s =>
-            s.name.toLowerCase().includes(search.toLowerCase())
-        );
+        query.name = { $regex: search, $options: 'i' };
     }
 
     const start = (page - 1) * limit;
-    const end = start + limit;
+
+    const [total, data] = await Promise.all([
+        Student.countDocuments(query),
+        Student.find(query).skip(start).limit(limit)
+    ]);
 
     return {
-        total: students.length,
-        data: students.slice(start, end)
+        total,
+        data
     };
 };
 
 // GET BY ID
-exports.getStudentById = (id) => {
-    const students = readData();
-    const student = students.find(s => s.id === id);
+exports.getStudentById = async (id) => {
+    const student = await Student.findById(id);
 
     if (!student) {
         throw new CustomError('Student not found', 404);
@@ -64,28 +39,26 @@ exports.getStudentById = (id) => {
 };
 
 // UPDATE
-exports.updateStudent = (id, payload) => {
-    const students = readData();
-    const index = students.findIndex(s => s.id === id);
+exports.updateStudent = async (id, payload) => {
+    const student = await Student.findByIdAndUpdate(id, payload, {
+        new: true,
+        runValidators: true
+    });
 
-    if (index === -1) {
+    if (!student) {
         throw new CustomError('Student not found', 404);
     }
 
-    students[index] = { ...students[index], ...payload };
-    writeData(students);
-
-    return students[index];
+    return student;
 };
 
 // DELETE
-exports.deleteStudent = (id) => {
-    const students = readData();
-    const filtered = students.filter(s => s.id !== id);
+exports.deleteStudent = async (id) => {
+    const student = await Student.findByIdAndDelete(id);
 
-    if (students.length === filtered.length) {
+    if (!student) {
         throw new CustomError('Student not found', 404);
     }
 
-    writeData(filtered);
+    return student;
 };

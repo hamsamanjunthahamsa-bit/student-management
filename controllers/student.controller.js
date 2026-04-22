@@ -1,9 +1,9 @@
 const studentService = require('../services/student.service');
 
 // CREATE
-exports.create = (req, res, next) => {
+exports.create = async (req, res, next) => {
     try {
-        const student = studentService.createStudent(req.body);
+        const student = await studentService.createStudent(req.body);
         res.status(201).json(student);
     } catch (err) {
         next(err);
@@ -11,10 +11,10 @@ exports.create = (req, res, next) => {
 };
 
 // GET ALL
-exports.getAll = (req, res, next) => {
+exports.getAll = async (req, res, next) => {
     try {
         const { page, limit, search } = req.query;
-        const data = studentService.getAllStudents({
+        const data = await studentService.getAllStudents({
             page: Number(page),
             limit: Number(limit),
             search
@@ -26,9 +26,9 @@ exports.getAll = (req, res, next) => {
 };
 
 // GET ONE
-exports.getOne = (req, res, next) => {
+exports.getOne = async (req, res, next) => {
     try {
-        const student = studentService.getStudentById(req.params.id);
+        const student = await studentService.getStudentById(req.params.id);
         res.status(200).json(student);
     } catch (err) {
         next(err);
@@ -36,9 +36,9 @@ exports.getOne = (req, res, next) => {
 };
 
 // UPDATE
-exports.update = (req, res, next) => {
+exports.update = async (req, res, next) => {
     try {
-        const student = studentService.updateStudent(req.params.id, req.body);
+        const student = await studentService.updateStudent(req.params.id, req.body);
         res.status(200).json(student);
     } catch (err) {
         next(err);
@@ -46,9 +46,9 @@ exports.update = (req, res, next) => {
 };
 
 // DELETE
-exports.remove = (req, res, next) => {
+exports.remove = async (req, res, next) => {
     try {
-        studentService.deleteStudent(req.params.id);
+        await studentService.deleteStudent(req.params.id);
         res.status(200).json({ message: 'Deleted successfully' });
     } catch (err) {
         next(err);
