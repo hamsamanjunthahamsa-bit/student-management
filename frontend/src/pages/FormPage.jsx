@@ -41,7 +41,7 @@ export default function FormPage() {
       navigate('/dashboard');
     } catch (error) {
       console.error("Failed to save student:", error);
-      alert("An error occurred while saving.");
+      alert(error.message || "An error occurred while saving the student.");
     } finally {
       setIsSaving(false);
     }

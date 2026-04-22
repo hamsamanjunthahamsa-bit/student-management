@@ -11,17 +11,21 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     fetchStudents();
   }, []);
 
   const fetchStudents = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await studentService.getAllStudents();
       setStudents(data);
-    } catch (error) {
-      console.error("Failed to fetch students:", error);
+    } catch (err) {
+      console.error("Failed to fetch students:", err);
+      setError(err.message || "Failed to fetch students from server.");
     } finally {
       setIsLoading(false);
     }
@@ -29,11 +33,17 @@ export default function Dashboard() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
+      // Optimistic UI update: Remove the student immediately
+      const previousStudents = [...students];
+      setStudents(students.filter(s => s.id !== id));
+
       try {
         await studentService.deleteStudent(id);
-        fetchStudents();
-      } catch (error) {
-        console.error("Failed to delete student:", error);
+      } catch (err) {
+        console.error("Failed to delete student:", err);
+        alert(err.message || "Failed to delete student. Reverting changes.");
+        // Revert UI on failure
+        setStudents(previousStudents);
       }
     }
   };
@@ -60,6 +70,13 @@ export default function Dashboard() {
           <Plus size={24} /> Add New Student
         </Button>
       </div>
+
+      {error && (
+        <div className="bg-rose-50 border-l-4 border-rose-500 p-4 mb-8 rounded-r-2xl shadow-sm">
+          <p className="text-rose-700 font-bold">{error}</p>
+          <button onClick={fetchStudents} className="text-rose-600 underline text-sm mt-2 font-medium">Try again</button>
+        </div>
+      )}
 
       <div className="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 mb-8 flex items-center">
         <div className="relative w-full max-w-2xl">
