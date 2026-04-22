@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const studentRoutes = require('../routers/student.routers');
+const authRoutes = require('../routers/auth.routers');
 
 const logger = require('../middlewares/logger.middleware');
 const errorHandler = require('../middlewares/error.middleware');
@@ -17,6 +18,7 @@ app.use(cors({
 app.use(express.json());
 app.use(logger);
 
+app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 
 app.use(notFound);
