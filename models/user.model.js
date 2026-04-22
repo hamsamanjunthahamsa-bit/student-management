@@ -55,21 +55,16 @@ const userSchema = new mongoose.Schema({
  * - Salt: bcrypt adds random salt to each password, preventing rainbow table attacks
  * - Performance: bcrypt is designed to be slow, making brute-force attacks impractical
  */
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
     // Only hash the password if it has been modified (or is new)
     if (!this.isModified('password')) {
-        return next();
+        return;
     }
 
-    try {
-        // Generate salt and hash password
-        // Salt rounds: 12 is a good balance between security and performance
-        const salt = await bcrypt.genSalt(12);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    // Generate salt and hash password
+    // Salt rounds: 12 is a good balance between security and performance
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
 });
 
 /**
